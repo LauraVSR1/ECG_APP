@@ -11,8 +11,8 @@ def descargar_modelo():
     if not os.path.exists(ruta):
         url = "https://drive.google.com/uc?id=1ozdfGCGDPY8-UHt35CzqeW1SAb9RX5ai"
         with st.spinner("Descargando modelo por primera vez..."):
-            gdown.download(url, ruta, quiet=False, fuzzy=True)
-
+            gdown.download(url, ruta, quiet=False)
+            
 descargar_modelo()
 
 # ── Configuración ─────────────────────────────────────────────
