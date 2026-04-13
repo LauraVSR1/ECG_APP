@@ -1,19 +1,19 @@
 import os
-import gdown
 import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+from huggingface_hub import hf_hub_download
 
-# ── Descargar modelo desde Google Drive ───────────────────────
-def descargar_modelo():
-    ruta = "best_ecg_model_v6.keras"
-    if not os.path.exists(ruta):
-        url = "https://drive.google.com/uc?id=1ozdfGCGDPY8-UHt35CzqeW1SAb9RX5ai"
-        with st.spinner("Descargando modelo por primera vez..."):
-            gdown.download(url, ruta, quiet=False)
-            
-descargar_modelo()
+# ── Descargar modelo desde Hugging Face ───────────────────────
+@st.cache_resource
+def cargar_modelo():
+    with st.spinner("Descargando modelo por primera vez..."):
+        ruta = hf_hub_download(
+            repo_id="LauValen/ecg-classifier",
+            filename="best_ecg_model_v6.keras"
+        )
+    return tf.keras.models.load_model(ruta)
 
 # ── Configuración ─────────────────────────────────────────────
 st.set_page_config(
@@ -36,7 +36,6 @@ st.markdown("""
         min-height: 100vh;
     }
 
-    /* ── Header ── */
     .ecg-header {
         text-align: center;
         padding: 2.8rem 0 1.6rem;
@@ -76,7 +75,6 @@ st.markdown("""
         line-height: 1.65;
     }
 
-    /* ── Divider ── */
     .ecg-divider {
         border: none;
         height: 1px;
@@ -84,7 +82,6 @@ st.markdown("""
         margin: 1.6rem 0;
     }
 
-    /* ── Upload area ── */
     [data-testid="stFileUploader"] {
         background: rgba(255,255,255,0.6) !important;
         border: 2px dashed rgba(139,92,246,0.35) !important;
@@ -101,14 +98,12 @@ st.markdown("""
         color: #a78bfa !important;
     }
 
-    /* ── Imagen ── */
     [data-testid="stImage"] img {
         border-radius: 16px;
         border: 2px solid rgba(255,255,255,0.9);
         box-shadow: 0 8px 40px rgba(120,80,200,0.12);
     }
 
-    /* ── Tarjetas de resultado ── */
     .result-card {
         border-radius: 20px;
         padding: 1.5rem 1.8rem;
@@ -116,26 +111,16 @@ st.markdown("""
         position: relative;
         overflow: hidden;
     }
-    .result-card::after {
-        content: '';
-        position: absolute;
-        top: -40px; right: -40px;
-        width: 120px; height: 120px;
-        border-radius: 50%;
-        opacity: 0.12;
-    }
     .card-normal {
         background: linear-gradient(135deg, rgba(236,253,245,0.95) 0%, rgba(209,250,229,0.9) 100%);
         border: 1.5px solid rgba(52,211,153,0.4);
         box-shadow: 0 4px 24px rgba(52,211,153,0.1);
     }
-    .card-normal::after { background: #34d399; }
     .card-anormal {
         background: linear-gradient(135deg, rgba(255,241,242,0.95) 0%, rgba(254,226,226,0.9) 100%);
         border: 1.5px solid rgba(251,113,133,0.4);
         box-shadow: 0 4px 24px rgba(251,113,133,0.1);
     }
-    .card-anormal::after { background: #fb7185; }
 
     .card-pill {
         display: inline-block;
@@ -150,22 +135,14 @@ st.markdown("""
     .pill-normal  { background: rgba(52,211,153,0.15); color: #059669; }
     .pill-anormal { background: rgba(251,113,133,0.15); color: #e11d48; }
 
-    .card-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
+    .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
     .title-normal  { color: #065f46; }
     .title-anormal { color: #9f1239; }
 
-    .card-text {
-        font-size: 0.88rem;
-        line-height: 1.75;
-    }
+    .card-text { font-size: 0.88rem; line-height: 1.75; }
     .text-normal  { color: #047857; }
     .text-anormal { color: #be123c; }
 
-    /* ── Métricas ── */
     [data-testid="stMetric"] {
         background: rgba(255,255,255,0.7) !important;
         border: 1.5px solid rgba(255,255,255,0.95) !important;
@@ -187,7 +164,6 @@ st.markdown("""
         font-size: 1.7rem !important;
     }
 
-    /* ── Progress bar ── */
     .stProgress > div > div > div > div {
         background: linear-gradient(90deg, #a78bfa, #ec4899, #60a5fa) !important;
         border-radius: 99px !important;
@@ -211,7 +187,6 @@ st.markdown("""
         margin-bottom: 0.3rem;
     }
 
-    /* ── Disclaimer ── */
     .disclaimer {
         background: rgba(255,255,255,0.6);
         border: 1.5px solid rgba(251,191,36,0.35);
@@ -224,13 +199,11 @@ st.markdown("""
         backdrop-filter: blur(8px);
     }
 
-    /* ── Info & expander ── */
     .stAlert {
         background: rgba(255,255,255,0.65) !important;
         border: 1.5px solid rgba(139,92,246,0.25) !important;
         border-radius: 14px !important;
         color: #7c3aed !important;
-        backdrop-filter: blur(8px);
     }
     .streamlit-expanderHeader {
         background: rgba(255,255,255,0.55) !important;
@@ -243,7 +216,6 @@ st.markdown("""
         background: rgba(255,255,255,0.45) !important;
         color: #64748b !important;
         font-size: 0.87rem !important;
-        border-radius: 0 0 12px 12px !important;
     }
 
     p, li { color: #64748b; }
@@ -252,13 +224,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Cargar modelo ─────────────────────────────────────────────
-@st.cache_resource
-def cargar_modelo():
-    return tf.keras.models.load_model("best_ecg_model_v6.keras")
-
 model = cargar_modelo()
 
-THRESHOLD = 0.68
+THRESHOLD = 0.59
 
 # ── Header ────────────────────────────────────────────────────
 st.markdown("""
@@ -284,7 +252,6 @@ if archivo is not None:
 
     st.markdown("<hr class='ecg-divider'>", unsafe_allow_html=True)
 
-    # ── Predicción ────────────────────────────────────────────
     with st.spinner("Analizando el ECG..."):
         img_array = np.array(imagen.resize((224, 224)))
         img_array = np.expand_dims(img_array, axis=0).astype("float32")
@@ -294,7 +261,6 @@ if archivo is not None:
     confianza   = prob if es_anormal else (1 - prob)
     confianza_p = round(confianza * 100, 1)
 
-    # ── Resultado ─────────────────────────────────────────────
     if not es_anormal:
         st.markdown(f"""
         <div class="result-card card-normal">
@@ -322,19 +288,16 @@ if archivo is not None:
         </div>
         """, unsafe_allow_html=True)
 
-    # ── Métricas ──────────────────────────────────────────────
     col1, col2 = st.columns(2)
     with col1:
         st.metric(label="Confianza del modelo", value=f"{confianza_p}%")
     with col2:
         st.metric(label="Resultado", value="Normal" if not es_anormal else "Anormal")
 
-    # ── Barra de probabilidad ─────────────────────────────────
     st.markdown("<div class='progress-label'>Probabilidad de anomalía</div>", unsafe_allow_html=True)
     st.progress(prob)
     st.markdown(f"<div class='score-caption'>Score: {prob:.4f} &nbsp;|&nbsp; Threshold: {THRESHOLD}</div>", unsafe_allow_html=True)
 
-    # ── Disclaimer ────────────────────────────────────────────
     st.markdown("""
     <div class="disclaimer">
         ⚕️ <strong>Aviso importante:</strong> Este resultado es orientativo y
